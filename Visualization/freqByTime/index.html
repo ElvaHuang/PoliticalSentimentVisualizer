@@ -1,0 +1,339 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <script src="http://d3js.org/d3.v2.js"></script>
+
+  <style type="text/css">
+  body {
+        font: 700 20px "Helvetica Neue", Helvetica;
+    }
+
+    #chart-container {
+	width: 1000px; 
+	margin: 0 auto 50px auto;
+	background: rgba(255,255,255,0.5);
+	box-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+	padding: 10px 30px;
+    }
+
+    svg {
+	font-family: 'Lato', Arial, serif;
+	font-size: 10px;
+	font-weight: 700;
+	text-shadow: 0 1px 1px rgba(255,255,255,0.8);
+    }
+
+    text.country-title {
+	font-size: 18px;
+    }
+
+    text.instructions {
+	font-size: 12px;
+    }
+
+    g.context g.brush rect.background {
+	fill: rgba(0,0,0,.1);
+    }
+
+    g.context g.axis path {
+	stroke-opacity: 0;
+    }
+
+    g.context g.axis line {
+	stroke-opacity: .1;
+    }
+
+    g.Military path.chart {
+  fill: rgba(0,153,76,0.8);
+    }
+
+    g.Jobs.and.Businesses path.chart {
+  fill: rgba(204,204,0,0.8);
+    }
+
+    g.Education path.chart {
+  fill: rgba(102,0,204,0.8);
+    }
+
+    g.Budget path.chart {
+  fill: rgba(204,0,0,0.8);
+    }
+
+    g.Energy path.chart {
+  fill: rgba(0,102,204,0.8);
+    }
+
+    g.Government.Accountability path.chart {
+  fill: rgba(255,128,0,0.8);
+    }
+
+   g.Disadvantaged.Populations path.chart {
+  fill: rgba(76,153,0,0.8);
+    }
+
+    g.Emergency.Relief path.chart {
+  fill: rgba(255,51,153,0.8);
+    }
+
+    g.Law.and.Judiciary path.chart {
+  fill: rgba(96,96,96,0.8);
+    }
+
+    g.Health path.chart {
+  fill: rgba(204,0,204,0.8);
+    }
+
+
+    .axis path, .axis line {
+	fill: none;
+	stroke: #aaa;
+	shape-rendering: crispEdges;
+    }
+
+    .brush .extent {
+	stroke: #f09f8c;
+	fill-opacity: .125;
+	shape-rendering: crispEdges;
+    }
+
+    g.context rect.background{
+	fill: rgb(200,200,255);
+	visibility: visible !important;
+    }
+    </style>
+</head>
+<body>
+
+    2012 VOXGOV FEDERAL GOVERNMENT MEDIA RELEASE
+    <div class="hint">Topic Distribution of Media Release By Frequency</div>
+    
+
+    <div id="chart-container">
+        <script type="text/javascript">
+        
+        var margin = {top: 15, right: 40, bottom: 150, left: 60},
+        width = 950 - margin.left - margin.right,
+        height = 510 - margin.top - margin.bottom,
+        contextHeight = 50;
+        contextWidth = width * .5;
+				var parseDate = d3.time.format("%d/%m/%Y").parse;
+
+        var svg = d3.select("#chart-container").append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", (height + margin.top + margin.bottom));
+												
+        d3.csv('data.csv', createChart);
+						
+        function createChart(data){
+            var countries = [];
+            var charts = [];
+            var maxDataPoint = 0;
+							
+            /* Loop through first row and get each country 
+                and push it into an array to use later */
+            for (var prop in data[0]) {
+                if (data[0].hasOwnProperty(prop)) {
+                    if (prop != 'Month') {
+                        countries.push(prop);
+                    }
+                }
+            };
+							
+            var countriesCount = countries.length;
+            var startYear = data[0].Month;
+            var endYear = data[data.length - 1].Month;
+            var chartHeight = height * (1 / countriesCount);
+							
+            /* Let's make sure these are all numbers, 
+                we don't want javaScript thinking it's text 
+							
+                Let's also figure out the maximum data point
+                We'll use this later to set the Y-Axis scale
+            */
+          data.forEach(function(d) {
+            for (var prop in d) {
+              if (d.hasOwnProperty(prop)) {
+                if (prop !='Month') {
+                
+                d[prop] = parseFloat(d[prop]);
+                
+                if (d[prop] > maxDataPoint) {
+                  maxDataPoint = d[prop];
+                }
+              }
+            }
+            }
+            // D3 needs a date object, let's convert it just one time
+            d.Month = (parseDate(d.Month));
+          });
+          
+          for(var i = 0; i < countriesCount; i++){
+            charts.push(new Chart({
+                                  data: data.slice(),
+                                  id: i,
+                                  name: countries[i],
+                                  width: width,
+                                  height: height * (1 / countriesCount),
+                                  maxDataPoint: maxDataPoint,
+                                  svg: svg,
+                                  margin: margin,
+                                  showBottomAxis: (i == countries.length - 1)
+                                }));
+            
+          }
+          
+          /* Let's create the context brush that will 
+              let us zoom and pan the chart */
+          var contextXScale = d3.time.scale()
+                                .range([-100, contextWidth + 200])
+                                .domain(charts[0].xScale.domain()); 
+          
+          var contextAxis = d3.svg.axis()
+                                  .scale(contextXScale)
+                                  .tickSize(contextHeight)
+                                  .tickPadding(-10)
+                                  .orient("bottom");
+          
+          var contextArea = d3.svg.area()
+                                  .interpolate("monotone")
+                                  .x(function(d) { return contextXScale(d.Month); })
+                                  .y0(contextHeight)
+                                  .y1(0);
+          
+          var brush = d3.svg.brush()
+                            .x(contextXScale)
+                            .on("brush", onBrush);
+          
+          var context = svg.append("g")
+                            .attr("class","context")
+                            .attr("transform", "translate(" + (margin.left + width * .2) + "," + (height + margin.top + chartHeight + 65) + ")");
+          
+          context.append("g")
+                            .attr("class", "x axis top")
+                            .attr("transform", "translate(0,0)")
+                            .call(contextAxis)
+                            
+          context.append("g")
+                            .attr("class", "x brush")
+                            .call(brush)
+                            .selectAll("rect")
+                              .attr("y", 0)
+                              .attr("height", contextHeight);
+          
+          context.append("text")
+                    .attr("class","instructions")
+                    .attr("transform", "translate(0," + (contextHeight + 20) + ")")
+                    .text('click and drag panel above to select duration of interest');
+                    
+          function onBrush(){
+            /* this will return a date range to pass into the chart object */
+            var b = brush.empty() ? contextXScale.domain() : brush.extent();
+            for(var i = 0; i < countriesCount; i++){
+              charts[i].showOnly(b);
+            }
+          }
+          }
+          
+          function Chart(options){
+          this.chartData = options.data;
+          this.width = options.width;
+          this.height = options.height;
+          this.maxDataPoint = options.maxDataPoint;
+          this.svg = options.svg;
+          this.id = options.id;
+          this.name = options.name;
+          this.margin = options.margin;
+          this.showBottomAxis = options.showBottomAxis;
+          
+          var localName = this.name;
+          
+          /* XScale is time based */
+          this.xScale = d3.time.scale()
+                                .range([0, this.width])
+                                .domain(d3.extent(this.chartData.map(function(d) { return d.Month; })));
+          
+          /* YScale is linear based on the maxData Point we found earlier */
+          this.yScale = d3.scale.linear()
+                                .range([this.height,0])
+                                .domain([0,1500]);
+          var xS = this.xScale;
+          var yS = this.yScale;
+          
+          /* 
+            This is what creates the chart.
+            There are a number of interpolation options. 
+            'basis' smooths it the most while 'linear' does not smooth, however, when working with a lot of data, this will slow it down 
+          */
+          this.area = d3.svg.area()
+                                .interpolate("linear")
+                                .x(function(d) { return xS(d.Month); })
+                                .y0(this.height)
+                                .y1(function(d) { return yS(d[localName]); });
+          /*
+            This isn't required - it simply creates a mask. If this wasn't here,
+            when we zoom/panned, we'd see the chart go off to the left under the y-axis 
+          */
+          this.svg.append("defs").append("clipPath")
+                                  .attr("id", "clip-" + this.id)
+                                  .append("rect")
+                                    .attr("width", this.width)
+                                    .attr("height", this.height);
+          /*
+            Assign it a class so we can assign a fill color
+            And position it on the page
+          */
+          this.chartContainer = svg.append("g")
+                                    .attr('class',this.name.toLowerCase())
+                                    .attr("transform", "translate(" + this.margin.left + "," + (this.margin.top + (this.height * this.id) + (10 * this.id)) + ")");
+          
+          /* We've created everything, let's actually add it to the page */
+          this.chartContainer.append("path")
+                              .data([this.chartData])
+                              .attr("class", "chart")
+                              .attr("clip-path", "url(#clip-" + this.id + ")")
+                              .attr("d", this.area);
+                          
+          this.xAxisTop = d3.svg.axis().scale(this.xScale).orient("bottom");
+          this.xAxisBottom = d3.svg.axis().scale(this.xScale).orient("top");
+          /* We only want a top axis if it's the first country */
+          if(this.id == 0){
+            this.chartContainer.append("g")
+                  .attr("class", "x axis top")
+                  .attr("transform", "translate(0,0)")
+                  .call(this.xAxisTop);
+          }
+          
+          /* Only want a bottom axis on the last country */
+          if(this.showBottomAxis){
+              this.chartContainer.append("g")
+                  .attr("class", "x axis bottom")
+                  .attr("transform", "translate(0," + this.height + ")")
+                  .call(this.xAxisBottom);
+            }  
+            
+          this.yAxis = d3.svg.axis().scale(this.yScale).orient("left").ticks(5);
+            
+          this.chartContainer.append("g")
+                              .attr("class", "y axis")
+                              .attr("transform", "translate(-20,0)")
+                              .call(this.yAxis);
+                              
+          this.chartContainer.append("text")
+                              .attr("class","country-title")
+                              .attr("transform", "translate(15,40)")
+                              .text(this.name);
+          
+          }
+          
+          Chart.prototype.showOnly = function(b){
+            this.xScale.domain(b);
+            this.chartContainer.select("path").data([this.chartData]).attr("d", this.area);
+            this.chartContainer.select(".x.axis.top").call(this.xAxisTop);
+            this.chartContainer.select(".x.axis.bottom").call(this.xAxisBottom);
+          }
+
+
+          </script>
+        </div>
+  </body>
+</html>

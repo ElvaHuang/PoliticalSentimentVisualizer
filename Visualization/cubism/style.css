@@ -1,0 +1,121 @@
+body {
+		  /*overflow: hidden;*/
+		  margin: 0;
+		  font-size: 14px;
+		  font-family: nyt-franklin,nyt-franklin-1,'Helvetica Neue',Arial,sans-serif;
+		}
+
+		#footer {
+		  position: absolute;
+		  top: 0;
+		  z-index: 1;
+		  display: block;
+		  font-size: 36px;
+		  font-weight: 300;
+		  font-family:nyt-franklin,nyt-franklin-1,'Helvetica Neue',Arial,sans-serif;
+		  text-shadow: 0 1px 0 #fff;
+		  top: 30px;
+		  left: 400px;
+		  text-align: left;
+		}
+		#demo{
+		  position: absolute;
+		  top: 0;
+		  z-index: 1;
+		  display: block;
+		  font-size: 12px;
+		  padding-bottom: 20px;
+		  font-weight: 300;
+		  font-family:nyt-franklin,nyt-franklin-1,'Helvetica Neue',Arial,sans-serif;
+		  text-shadow: 0 1px 0 #fff;
+		  top: 30px;
+		  left: 50px;
+		  text-align: left;
+
+		}
+		#owner{
+		  text-align: right;
+         color: #474747;
+         padding-bottom: 20px;
+         font-size:10px;
+		}
+        #TitleImage{
+                position:absolute;
+                top:30px;
+                left:900px; 
+                }
+                .saturate img{
+                	filter: saturate(300%);
+	        -webkit-filter: saturate(500%);
+	           -moz-filter: saturate(500%);
+	             -o-filter: saturate(500%);
+	            -ms-filter: saturate(500%);
+                }
+
+
+        #FootImage{
+        	position:absolute;
+        	top:350px;
+        	Left:150px;
+        }
+		#SideText{
+		  position: absolute;
+		  display: block;
+		  font-size: 15px;
+		  color: #474747;
+		  top: 0px;
+		  left: 450px;
+		  width: 800px;
+		}
+
+		#BelowText{
+		  position: absolute;
+		  font-size: 14px;
+		  color: #474747;
+		  top: 900px;
+		  left: 30px;
+		  width: 1000px;
+		}
+		
+		line {
+		  stroke: #000;
+		  stroke-width: 1.px;
+		}
+
+		.hint {
+		  left: 0;
+		  font-size: 20px;
+          text-align: center;
+          color: #474747;
+          margin-top: -30px;
+		}
+
+		text {
+		  font-size: 10px;
+		}
+
+		.titles{
+		  font-size: 14px;
+		}
+
+		.annotate{
+		  font-size: 11px;
+		  fill: #474747;
+		}
+
+		path.chord {
+		  fill-opacity: .80;
+		}
+		
+		.pTitle {
+		text-align: center;
+		   font-size: 35px;
+		   text-shadow: 0 1px 0 #fff;
+		   fill: #474747;
+		   font-family: nyt-franklin,nyt-franklin-1,'Helvetica Neue',Arial,sans-serif;
+		}
+		.Side {
+			font-size: 15px;
+		}
+
+		

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+body {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  margin: 30px auto;
+  width: 378px;
+  position: relative;
+}
+
+header {
+  padding: 10px 0;
+}
+
+.group {
+  margin-bottom: 1em;
+}
+
+.axis {
+  font: 10px sans-serif;
+  position: fixed;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.axis text {
+  -webkit-transition: fill-opacity 250ms linear;
+}
+
+.axis path {
+  display: none;
+}
+
+.axis line {
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis.top {
+  top: 0px;
+  padding: 0 0 24px 0;
+}
+
+.axis.bottom {
+  bottom: 0px;
+  padding: 24px 0 0 0;
+}
+
+.horizon {
+  border-bottom: solid 1px #000;
+  overflow: hidden;
+  position: relative;
+}
+
+.horizon {
+  border-top: solid 1px #000;
+  border-bottom: solid 1px #000;
+}
+
+.horizon + .horizon {
+  border-top: none;
+}
+
+.horizon canvas {
+  display: block;
+}
+
+.horizon .title,
+.horizon .value {
+  bottom: 30px;
+  line-height: 30px;
+  margin: 0 6px;
+  position: absolute;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  white-space: nowrap;
+}
+
+.horizon .title {
+  right: 0;
+  top:10;
+}
+
+.horizon .value {
+  left: 0;
+}
+
+.line {
+  background: #000;
+  z-index: 2;
+}
+
+</style>
+
+<head>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="cubism.v1.js"></script>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+ <div id="SideText">     
+    <p  class="pTitle">
+       <img src="logo.jpeg" border=0 height="60px" width="90px" display="inline">2012 VOXGOV FEDERAL GOVERNMENT MEDIA RELEASE</p>
+    <p class="hint">Topical Sentiment Benchmarking by Location (Cartography)</p>
+    
+    <p class="Side">This interactive visualization presents each topic's sentiment score as a time series.</p> 
+    <p class="Side"><b><font color="#549bc7">The blue color</font></b> represents positive sentiment and <b><font color="#DE6F59">the red color</font></b> represents negative sentiment. The height of a tick shows the abosulte sentiment value of a topic. </p>
+    <p class="Side">Try move your mouse, and you will be able to track the real time changes in sentiment.</p>
+    <div id="owner">
+      <p>Analysis and Visualization created by <A HREF="mailto:Fantastic4Columbia@gmail.com?SUBJECT=Cubism">Fantastic 4</A><br>
+Modified from <A HREF="https://square.github.io/cubism/">Square</A> 
+     </p>
+    </div>
+</div>
+
+
+<body id="demo">
+<script>
+var format = d3.time.format("%Y-%m-%d");
+var dF = new Date(2012,12,31);
+var context = cubism.context()
+     .serverDelay(Date.now() - dF) //correct sign so axis is correct & not in future.
+    .step(24*60*60*1000)
+    .size(document.body.clientWidth)
+    .stop();
+ 
+
+
+context
+  .scale.domain([
+    format.parse("2011-12-25").getTime(),
+    format.parse("2012-12-31").getTime()
+  ]);
+d3.select("#demo").selectAll(".axis")
+    .data(["top", "bottom"])
+  .enter().append("div")
+    .attr("class", function(d) { return d + " axis"; })
+    .each(function(d) { d3.select(this).call(context.axis().orient(d).tickFormat(d3.time.format("%b"))); });
+
+d3.select("body").append("div")
+    .attr("class", "rule")
+    .call(context.rule());
+
+d3.select("body").selectAll(".horizon")
+    .data(["Military","Job&Business","Education","Budget","Energy","Gov Accountability","Disadvantaged POP","Emergency","Law","Health"].map(stock))
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon")
+  .call(context.horizon().height(60)
+        .mode("mirror").colors(["#de6f59","#549bc7"]).extent([-5, 5]).format(d3.format("+,.2r")))
+
+context.on("focus", function(i) {
+  d3.selectAll(".value").style("right",
+    i == null
+      ? null
+      : context.size() - i + "px");
+});
+
+function stock(name) {
+  var format = d3.time.format("%e-%b-%y");
+  return context.metric(function(start, stop, step, callback) {
+    d3.csv(name + ".csv", function(rows) {
+      var values = [],
+          lookup = {},
+          i = start.getTime();
+
+      rows.forEach(function(d) {
+        d.Open = +d.Open;
+        lookup[d.Date] = d;
+      });
+
+      while ((i += step) < stop) {
+        var key = format(new Date(i));
+        var value = key in lookup ? lookup[key].Open: null;
+        values.push(value);
+      }
+
+      callback(null, values);
+    });
+  }, name);
+}
+</script>
